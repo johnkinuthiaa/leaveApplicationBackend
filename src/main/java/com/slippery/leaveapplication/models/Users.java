@@ -25,6 +25,6 @@ public class Users {
     private Department department;
     private Role role;
     private LocalDateTime createdOn;
-    private Byte[] profilePhoto;
+    private byte[] profilePhoto;
 
 }

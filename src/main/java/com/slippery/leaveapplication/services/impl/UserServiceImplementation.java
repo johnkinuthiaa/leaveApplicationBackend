@@ -14,7 +14,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
@@ -85,6 +87,70 @@ public class UserServiceImplementation implements UserService {
         }
         response.setMessage("User authentication failed because of a wrong password");
         response.setStatusCode(400);
+        return response;
+    }
+
+    @Override
+    public UserResponse getUserWithId(String userId) {
+        UserResponse response =new UserResponse();
+        var user =repository.findById(userId);
+        if(user.isEmpty()){
+            response.setMessage("User with id "+ userId+" does not exist");
+            response.setStatusCode(404);
+            return response;
+        }
+        response.setUser(modelMapper.map(user,UserDto.class));
+        response.setMessage("User with id "+userId+" found");
+        response.setStatusCode(200);
+        return response;
+    }
+
+    @Override
+    public UserResponse deleteUserWithId(String userId) {
+        UserResponse response =new UserResponse();
+        var existingUser =getUserWithId(userId);
+        if(existingUser.getStatusCode() !=200){
+            return existingUser;
+        }
+        repository.deleteById(userId);
+        response.setMessage("User with id"+ userId+" deleted successfully");
+        response.setStatusCode(204);
+        return response;
+    }
+
+    @Override
+    public UserResponse deleteProfilePhoto(String userId) {
+        UserResponse response =new UserResponse();
+        var existingUser =getUserWithId(userId);
+        if(existingUser.getStatusCode() != 200){
+            return existingUser;
+        }
+        existingUser.getUser().setProfilePhoto(null);
+        Users user =modelMapper.map(existingUser.getUser(),Users.class);
+        repository.save(user);
+        UserDto userResponse =modelMapper.map(user, UserDto.class);
+        response.setUser(userResponse);
+        response.setMessage("Profile photo deleted successfully");
+        response.setStatusCode(204);
+        return response;
+
+    }
+
+    @Override
+    public UserResponse uploadProfilePhoto(MultipartFile image,String userId) throws IOException {
+        UserResponse response =new UserResponse();
+        var existingUser =getUserWithId(userId);
+        if(existingUser.getStatusCode() != 200){
+            return existingUser;
+        }
+        Users user =modelMapper.map(existingUser.getUser(),Users.class);
+
+        user.setProfilePhoto(image.getBytes());
+        repository.save(user);
+        UserDto userResponse =modelMapper.map(user, UserDto.class);
+        response.setUser(userResponse);
+        response.setMessage("Profile photo updated successfully");
+        response.setStatusCode(200);
         return response;
     }
 }
