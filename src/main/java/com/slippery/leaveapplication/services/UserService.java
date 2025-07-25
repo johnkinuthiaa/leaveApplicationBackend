@@ -15,6 +15,9 @@ public interface UserService {
     UserResponse deleteUserWithId(String userId);
     UserResponse deleteProfilePhoto(String userId);
     UserResponse uploadProfilePhoto(MultipartFile image,String userId) throws IOException;
+    UserResponse getAllUsers(String userId);
+    UserResponse setLeaveDays(String employeeId,String adminId,Long leaveDays);
+
 
 
 }

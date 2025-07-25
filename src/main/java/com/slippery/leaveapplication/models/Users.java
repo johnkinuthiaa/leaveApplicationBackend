@@ -1,5 +1,6 @@
 package com.slippery.leaveapplication.models;
 
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -17,7 +18,9 @@ import java.time.LocalDateTime;
 public class Users {
     @Id
     private String id;
+
     private String fullName;
+    @Email
     @Indexed(unique = true)
     private String email;
     private String password;
@@ -25,6 +28,8 @@ public class Users {
     private Department department;
     private Role role;
     private LocalDateTime createdOn;
+    private Boolean isOnLeave;
+    private Long leaveDays =0L;
     private byte[] profilePhoto;
 
 }

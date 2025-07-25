@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -152,5 +151,63 @@ public class UserServiceImplementation implements UserService {
         response.setMessage("Profile photo updated successfully");
         response.setStatusCode(200);
         return response;
+    }
+
+    @Override
+    public UserResponse getAllUsers(String userId) {
+        UserResponse response =new UserResponse();
+        var existingUser =getUserWithId(userId);
+        if(existingUser.getStatusCode() !=200){
+            return existingUser;
+        }
+        var user =existingUser.getUser();
+        var isAdmin =user.getRole().name().equalsIgnoreCase("CEO") ||
+                user.getRole().name().equalsIgnoreCase("HOD");
+        if(!isAdmin){
+            response.setMessage("User doesnt have the right privileges to perform this operation");
+            response.setStatusCode(401);
+            return response;
+        }
+        var users =repository.findAll().stream()
+                .filter(user1-> !user1.getRole().name().equals("CEO"))
+                .toList();
+        response.setStatusCode(200);
+
+        var userResp =modelMapper.map(users, UserDto.class);
+
+        response.setUsers(userResp);
+        response.setMessage("All employees");
+        return response;
+    }
+
+    @Override
+    public UserResponse setLeaveDays(String employeeId, String adminId,Long leaveDays) {
+        UserResponse response =new UserResponse();
+        var existingAdmin =getUserWithId(adminId);
+
+        var existingEmployee =getUserWithId(employeeId);
+        if(existingEmployee.getStatusCode() !=200){
+            return existingAdmin;
+        }
+
+        if(existingAdmin.getStatusCode() !=200){
+            return existingAdmin;
+        }
+
+        var user = existingAdmin.getUser();
+        var isAdmin =user.getRole().name().equalsIgnoreCase("CEO");
+        if(!isAdmin){
+            response.setMessage("User doesnt have the right privileges to perform this operation");
+            response.setStatusCode(401);
+            return response;
+        }
+        Users updatedUser =modelMapper.map(existingEmployee, Users.class);
+        updatedUser.setLeaveDays(leaveDays);
+        repository.save(updatedUser);
+        response.setMessage("leave days for "+existingEmployee.getUser().getFullName()+" set to "+leaveDays);
+        response.setStatusCode(200);
+        return response;
+
+
     }
 }

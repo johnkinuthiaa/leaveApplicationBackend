@@ -16,5 +16,7 @@ public class UserDto {
     private Role role;
     private LocalDateTime createdOn;
     private Byte[] profilePhoto;
+    private Long leaveDays;
+    private Boolean isOnLeave;
 
 }

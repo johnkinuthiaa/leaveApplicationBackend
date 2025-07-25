@@ -52,4 +52,14 @@ public class UserController  {
         var uploadedImage =userService.uploadProfilePhoto(image,userId);
         return ResponseEntity.status(HttpStatusCode.valueOf(uploadedImage.getStatusCode())).body(uploadedImage);
     }
+    @GetMapping("/{userId}/all")
+    public ResponseEntity<UserResponse> getAllUsers(@PathVariable String userId){
+        var users =userService.getAllUsers(userId);
+        return ResponseEntity.status(HttpStatusCode.valueOf(users.getStatusCode())).body(users);
+    }
+    @PatchMapping("/{adminId}/update-days/{leaveDays}/{employeeId}")
+    public ResponseEntity<UserResponse> setLeaveDays(@PathVariable String employeeId,@PathVariable String adminId,@PathVariable Long leaveDays){
+        var updated =userService.setLeaveDays(employeeId, adminId, leaveDays);
+        return ResponseEntity.status(HttpStatusCode.valueOf(updated.getStatusCode())).body(updated);
+    }
 }
