@@ -9,6 +9,6 @@ public interface LeaveApplicationsService {
     LeaveApplicationDto createNewLeaveApplication(String userId, LeaveApplications applications);
     LeaveApplicationDto getApplicationsByUser(String userId);
     LeaveApplicationDto getApplicationsToReview(String headId);
-    LeaveApplication approveApplication(String applicationId,String adminId);
+    LeaveApplicationDto approveApplication(String applicationId,String adminId);
 
 }

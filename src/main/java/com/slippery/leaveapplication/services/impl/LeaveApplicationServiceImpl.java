@@ -4,6 +4,7 @@ import com.slippery.leaveapplication.LeaveApplication;
 import com.slippery.leaveapplication.dto.LeaveApplicationDto;
 import com.slippery.leaveapplication.dto.UserDto;
 import com.slippery.leaveapplication.models.LeaveApplications;
+import com.slippery.leaveapplication.models.Role;
 import com.slippery.leaveapplication.models.Status;
 import com.slippery.leaveapplication.models.Users;
 import com.slippery.leaveapplication.repository.LeaveApplicationRepository;
@@ -70,11 +71,129 @@ public class LeaveApplicationServiceImpl implements LeaveApplicationsService {
 
     @Override
     public LeaveApplicationDto getApplicationsToReview(String headId) {
-        return null;
+        LeaveApplicationDto response =new LeaveApplicationDto();
+        var existingUser =userService.getUserWithId(headId);
+        if(existingUser.getStatusCode() !=200){
+            return modelMapper.map(existingUser,LeaveApplicationDto.class);
+        }
+
+        var user =existingUser.getUser();
+        var role =user.getRole();
+        if(role.equals(Role.EMPLOYEE)){
+            response.setMessage("Cannot view this due to insufficient permissions ");
+            response.setStatusCode(401);
+            return response;
+        }
+        var applications =user.getApplicationsToReview();
+        response.setLeaveApplications(applications);
+        response.setStatusCode(200);
+        response.setMessage("All applications to be reviewed ");
+
+        return response;
     }
 
     @Override
-    public LeaveApplication approveApplication(String applicationId, String adminId) {
+    public LeaveApplicationDto approveApplication(String applicationId, String adminId) {
+        LeaveApplicationDto response =new LeaveApplicationDto();
+        var existingUser =userService.getUserWithId(adminId);
+        var existingApplication =repository.findById(applicationId);
+        var CEO =userService.getCEO();
+        if(existingApplication.isEmpty()){
+            response.setMessage("The application with id" +applicationId+" does not exist");
+            response.setStatusCode(404);
+            return response;
+        }
+
+        if(existingUser.getStatusCode() !=200){
+            return modelMapper.map(existingUser,LeaveApplicationDto.class);
+        }
+
+        var user =existingUser.getUser();
+        var role =user.getRole();
+        if(role.equals(Role.EMPLOYEE)){
+            response.setMessage("Cannot view this due to insufficient permissions ");
+            response.setStatusCode(401);
+            return response;
+        }
+        if(role.equals(Role.HOD)){
+//            approve application and send to ceo
+            var creatorId=existingApplication.get().getUserId();
+            var creator =userService.getUserWithId(creatorId).getUser();
+           var getApplication =creator.getApplicationsMade().stream()
+                           .filter(application->application.getId().equalsIgnoreCase(applicationId)).findFirst();
+
+           if(getApplication.isEmpty()){
+               response.setMessage("Application not found!!");
+               response.setStatusCode(404);
+               return response;
+           }
+//           update on creators side
+           getApplication.get().setStatus(Status.SEMI_APPROVED);
+           var saveUser =modelMapper.map(creator,Users.class);
+           userRepository.save(saveUser);
+//         update on hod side
+            var HODApplications =user.getApplicationsToReview().stream()
+                            .filter(applicationToReview ->applicationToReview.getId().equalsIgnoreCase(applicationId)).findFirst();
+            HODApplications.get().setStatus(Status.SEMI_APPROVED);
+            var saveHOD =modelMapper.map(user,Users.class);
+            userRepository.save(saveHOD);
+
+
+            existingApplication.get().setStatus(Status.SEMI_APPROVED);
+            repository.save(existingApplication.get());
+//            pushing to CEO
+
+            var applications =CEO.getUser().getApplicationsToReview();
+            applications.add(getApplication.get());
+            CEO.getUser().setApplicationsToReview(applications);
+            var saveCEO =modelMapper.map(CEO,Users.class);
+            userRepository.save(saveCEO);
+
+            response.setStatusCode(200);
+            response.setMessage("HOD Approval was successful and the document is awaiting approval by the CEO");
+            response.setLeaveApplication(existingApplication.get());
+            return response;
+
+        }
+        if(role.equals(Role.CEO)){
+            //            approve application and send to ceo
+            var creatorId=existingApplication.get().getUserId();
+            var creator =userService.getUserWithId(creatorId).getUser();
+            var getApplication =creator.getApplicationsMade().stream()
+                    .filter(application->application.getId().equalsIgnoreCase(applicationId)).findFirst();
+            if(getApplication.isEmpty()){
+                response.setMessage("Application not found!!");
+                response.setStatusCode(404);
+                return response;
+            }
+            //            update on CEOs side
+            var applications =CEO.getUser().getApplicationsToReview();
+            var CEOApplications =applications.stream()
+                    .filter(applications1 ->
+                            applications1.getId().equalsIgnoreCase(applicationId)).findFirst();
+            CEOApplications.get().setStatus(Status.APPROVED);
+
+            CEO.getUser().setApplicationsToReview(applications);
+            var saveCEO =modelMapper.map(CEO,Users.class);
+            userRepository.save(saveCEO);
+//           update on creators side
+            getApplication.get().setStatus(Status.APPROVED);
+            var saveUser =modelMapper.map(creator,Users.class);
+            userRepository.save(saveUser);
+//         update on hod side
+            var HODApplications =user.getApplicationsToReview().stream()
+                    .filter(applicationToReview ->applicationToReview.getId().equalsIgnoreCase(applicationId)).findFirst();
+            HODApplications.get().setStatus(Status.APPROVED);
+            var saveHOD =modelMapper.map(user,Users.class);
+            userRepository.save(saveHOD);
+
+            existingApplication.get().setStatus(Status.APPROVED);
+            repository.save(existingApplication.get());
+            response.setStatusCode(200);
+            response.setMessage("CEO Approval was successful");
+            response.setLeaveApplication(existingApplication.get());
+            return response;
+        }
         return null;
     }
 

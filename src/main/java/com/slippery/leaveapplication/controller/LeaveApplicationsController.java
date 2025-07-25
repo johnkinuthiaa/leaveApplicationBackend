@@ -29,4 +29,14 @@ public class LeaveApplicationsController  {
         var userApplications =service.getApplicationsByUser(userId);
         return ResponseEntity.status(HttpStatusCode.valueOf(userApplications.getStatusCode())).body(userApplications);
     }
+    @GetMapping("/get-in-review/{headId}")
+    public ResponseEntity<LeaveApplicationDto> getApplicationsToReview(@PathVariable String headId){
+        var applicationsToReview =service.getApplicationsToReview(headId);
+        return ResponseEntity.status(HttpStatusCode.valueOf(applicationsToReview.getStatusCode())).body(applicationsToReview);
+    }
+    @PatchMapping("/{adminId}/approve/{applicationId}")
+    public ResponseEntity<LeaveApplicationDto> approveApplication(@PathVariable String applicationId,@PathVariable String adminId){
+        var approvedApplication =service.approveApplication(applicationId, adminId);
+        return ResponseEntity.status(HttpStatusCode.valueOf(approvedApplication.getStatusCode())).body(approvedApplication);
+    }
 }
