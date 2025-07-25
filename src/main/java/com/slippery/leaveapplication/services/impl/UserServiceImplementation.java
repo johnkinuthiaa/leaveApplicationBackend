@@ -214,27 +214,14 @@ public class UserServiceImplementation implements UserService {
     @Override
     public UserResponse getHod(String departmentName) {
         UserResponse response =new UserResponse();
-        var hod =repository.
-                findAll().
-                stream().
-                filter(
-                user->
-                        user.getRole()
-                                .name()
-                                .equals("HOD")
-                                &&
-                                user.getDepartment()
-                                        .name().equals(departmentName)
-                ).findFirst();
-        if(hod.isEmpty()){
-            response.setMessage("No HOD for the given department");
-            response.setStatusCode(404);
+        try{
+
+//       TODO:     fetch hod for given department
             return response;
+        } catch (Exception e) {
+
+            throw new RuntimeException(e);
         }
-        var hodDto =modelMapper.map(hod,UserDto.class);
-        response.setStatusCode(200);
-        response.setMessage("HOD for the "+departmentName+" department");
-        response.setUser(hodDto);
-        return response;
+
     }
 }

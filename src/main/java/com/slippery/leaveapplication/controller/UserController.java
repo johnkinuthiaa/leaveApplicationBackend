@@ -62,4 +62,9 @@ public class UserController  {
         var updated =userService.setLeaveDays(employeeId, adminId, leaveDays);
         return ResponseEntity.status(HttpStatusCode.valueOf(updated.getStatusCode())).body(updated);
     }
+    @GetMapping("/{departmentName}")
+    public ResponseEntity<UserResponse> getHod(@PathVariable String departmentName){
+        var hod =userService.getHod(departmentName);
+        return ResponseEntity.status(HttpStatusCode.valueOf(hod.getStatusCode())).body(hod);
+    }
 }
