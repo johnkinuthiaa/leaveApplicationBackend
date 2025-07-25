@@ -1,5 +1,6 @@
 package com.slippery.leaveapplication.services.impl;
 
+import com.slippery.leaveapplication.LeaveApplication;
 import com.slippery.leaveapplication.dto.LeaveApplicationDto;
 import com.slippery.leaveapplication.dto.UserDto;
 import com.slippery.leaveapplication.models.LeaveApplications;
@@ -42,16 +43,91 @@ public class LeaveApplicationServiceImpl implements LeaveApplicationsService {
         var role =user.getRole().name();
         if(role.equals("EMPLOYEE")){
 //            call employee application
-            return employeeApplication(department,user,userId,applications);
+            return employeeApplication(department,user,applications);
         }else if(role.equals("HOD")){
-
+            return hodApplication(user,applications);
+        }else {
+            response.setMessage("Error creating an application for you foreign mister!!");
+            response.setStatusCode(401);
         }
         return response;
+    }
+
+    @Override
+    public LeaveApplicationDto getApplicationsByUser(String userId) {
+        LeaveApplicationDto response =new LeaveApplicationDto();
+        var existingUser =userService.getUserWithId(userId);
+        if(existingUser.getStatusCode() !=200){
+            return modelMapper.map(existingUser,LeaveApplicationDto.class);
+        }
+        var user =existingUser.getUser();
+        var applications =user.getApplicationsMade();
+        response.setLeaveApplications(applications);
+        response.setStatusCode(200);
+        response.setMessage("All applications by "+user.getFullName());
+        return response;
+    }
+
+    @Override
+    public LeaveApplicationDto getApplicationsToReview(String headId) {
+        return null;
+    }
+
+    @Override
+    public LeaveApplication approveApplication(String applicationId, String adminId) {
+        return null;
+    }
+
+    private LeaveApplicationDto hodApplication(
+            UserDto user,
+            LeaveApplications application
+    ){
+        LeaveApplicationDto response =new LeaveApplicationDto();
+
+        try{
+            application.setUserId(user.getId());
+            application.setUsername(user.getUsername());
+            application.setEmail(user.getEmail());
+            application.setAppliedOn(new Date());
+            application.setStatus(Status.PENDING);
+            repository.save(application);
+
+//        update info for the HOD
+            var hodApplications =user.getApplicationsMade();
+            hodApplications.add(application);
+            user.setApplicationsMade(hodApplications);
+            var updatedHodInfo =modelMapper.map(user, Users.class);
+            userRepository.save(updatedHodInfo);
+
+//        get ceo
+            var CEOResponse =userService.getCEO();
+            if(CEOResponse.getStatusCode() !=200){
+                return modelMapper.map(CEOResponse,LeaveApplicationDto.class);
+            }
+//        Update info for the CEO
+            var CEO =CEOResponse.getUser();
+            var ceoApplicationsToReview =CEO.getApplicationsToReview();
+            ceoApplicationsToReview.add(application);
+            CEO.setApplicationsToReview(ceoApplicationsToReview);
+
+            var updatedCeoApplicationsToReview =modelMapper.map(CEO, Users.class);
+
+            userRepository.save(updatedCeoApplicationsToReview);
+            response.setStatusCode(201);
+            response.setMessage("New application for "+user.getFullName() +" was created successfully and is waiting for review");
+            response.setLeaveApplication(application);
+            return response;
+        } catch (Exception e) {
+            response.setStatusCode(201);
+            response.setMessage("Error creating a New application for "+user.getFullName() +" because "+e.getLocalizedMessage());
+            response.setLeaveApplication(application);
+            return response;
+        }
+
     }
     private LeaveApplicationDto employeeApplication(
             String department,
             UserDto user,
-            String userId,
             LeaveApplications applications){
 
         LeaveApplicationDto response =new LeaveApplicationDto();

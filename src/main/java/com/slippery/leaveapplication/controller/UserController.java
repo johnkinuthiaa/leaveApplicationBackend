@@ -62,9 +62,14 @@ public class UserController  {
         var updated =userService.setLeaveDays(employeeId, adminId, leaveDays);
         return ResponseEntity.status(HttpStatusCode.valueOf(updated.getStatusCode())).body(updated);
     }
-    @GetMapping("/{departmentName}")
+    @GetMapping("/{departmentName}/head")
     public ResponseEntity<UserResponse> getHod(@PathVariable String departmentName){
         var hod =userService.getHod(departmentName);
         return ResponseEntity.status(HttpStatusCode.valueOf(hod.getStatusCode())).body(hod);
+    }
+    @GetMapping("/get/CEO")
+    public ResponseEntity<UserResponse> getCEO(){
+        var CEO =userService.getCEO();
+        return ResponseEntity.status(HttpStatusCode.valueOf(CEO.getStatusCode())).body(CEO);
     }
 }

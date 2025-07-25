@@ -225,13 +225,12 @@ public class UserServiceImplementation implements UserService {
         try{
 
 //       TODO:     fetch hod for given department
-            List<Users> usersList =repository.findAll()
+            var departmentHod =repository.findAll()
                     .stream()
                     .filter(user ->user.getRole().name().equals("HOD"))
-                    .toList();
-
-            Optional<Users> departmentHod =usersList.stream()
-                            .filter(user->user.getDepartment().name().equals("IT")).findFirst();
+                    .toList()
+                    .stream()
+                    .filter(user->user.getDepartment().name().equals(departmentName)).findFirst();
             if(departmentHod.isEmpty()){
                 response.setMessage("The department lead was not found");
                 response.setStatusCode(404);
@@ -247,5 +246,24 @@ public class UserServiceImplementation implements UserService {
             throw new RuntimeException(e);
         }
 
+    }
+
+    @Override
+    public UserResponse getCEO() {
+        UserResponse response =new UserResponse();
+        var CEO =repository.findAll()
+                .stream()
+                .filter(users -> users.getRole().name().equals("CEO"))
+                .findFirst();
+        if(CEO.isEmpty()){
+            response.setMessage("No user with that role was found");
+            response.setStatusCode(200);
+            return response;
+        }
+        var user =modelMapper.map(CEO,UserDto.class);
+        response.setUser(user);
+        response.setMessage("CEO found");
+        response.setStatusCode(200);
+        return response;
     }
 }

@@ -18,6 +18,8 @@ public interface UserService {
     UserResponse getAllUsers(String userId);
     UserResponse setLeaveDays(String employeeId,String adminId,Long leaveDays);
     UserResponse getHod(String departmentName);
+    UserResponse getCEO();
+
 
 
 

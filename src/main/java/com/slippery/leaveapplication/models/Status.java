@@ -3,7 +3,8 @@ package com.slippery.leaveapplication.models;
 public enum Status {
     PENDING,
     REJECTED,
-    APPROVED
+    APPROVED,
+    SEMI_APPROVED
 }
 
 
