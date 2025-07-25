@@ -30,7 +30,7 @@ public class Users {
     private Department department;
     private Role role;
     private LocalDateTime createdOn;
-    private Boolean isOnLeave;
+    private Boolean isOnLeave =false;
     private Long leaveDays =0L;
     private byte[] profilePhoto;
     private List<LeaveApplications> applicationsMade =new ArrayList<>();

@@ -7,6 +7,7 @@ import com.slippery.leaveapplication.dto.UserResponse;
 import com.slippery.leaveapplication.models.Users;
 import com.slippery.leaveapplication.repository.UserRepository;
 import com.slippery.leaveapplication.services.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,9 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class UserServiceImplementation implements UserService {
     private final UserRepository repository;
@@ -51,6 +55,10 @@ public class UserServiceImplementation implements UserService {
                     .profilePhoto(null)
                     .username(userRequest.getFullName().concat(generateRandomString().substring(0,4)))
                     .role(userRequest.getRole())
+                    .leaveDays(0L)
+                    .isOnLeave(false)
+                    .applicationsMade(new ArrayList<>())
+                    .applicationsToReview(new ArrayList<>())
                     .build();
             repository.save(user);
 
@@ -175,7 +183,7 @@ public class UserServiceImplementation implements UserService {
 
         var userResp =modelMapper.map(users, UserDto.class);
 
-        response.setUsers(userResp);
+        response.setUsers((List<UserDto>) userResp);
         response.setMessage("All employees");
         return response;
     }
@@ -217,6 +225,22 @@ public class UserServiceImplementation implements UserService {
         try{
 
 //       TODO:     fetch hod for given department
+            List<Users> usersList =repository.findAll()
+                    .stream()
+                    .filter(user ->user.getRole().name().equals("HOD"))
+                    .toList();
+
+            Optional<Users> departmentHod =usersList.stream()
+                            .filter(user->user.getDepartment().name().equals("IT")).findFirst();
+            if(departmentHod.isEmpty()){
+                response.setMessage("The department lead was not found");
+                response.setStatusCode(404);
+                return response;
+            }
+
+            response.setUser(modelMapper.map(departmentHod.get(),UserDto.class));
+            response.setStatusCode(200);
+            response.setMessage("The department HOD for "+departmentName);
             return response;
         } catch (Exception e) {
 
