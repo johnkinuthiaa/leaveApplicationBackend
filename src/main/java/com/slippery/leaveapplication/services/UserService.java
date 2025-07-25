@@ -17,6 +17,7 @@ public interface UserService {
     UserResponse uploadProfilePhoto(MultipartFile image,String userId) throws IOException;
     UserResponse getAllUsers(String userId);
     UserResponse setLeaveDays(String employeeId,String adminId,Long leaveDays);
+    UserResponse getHod(String departmentName);
 
 
 
