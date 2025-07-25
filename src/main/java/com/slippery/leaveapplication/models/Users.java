@@ -7,6 +7,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document
 @AllArgsConstructor
@@ -31,5 +33,8 @@ public class Users {
     private Boolean isOnLeave;
     private Long leaveDays =0L;
     private byte[] profilePhoto;
+    private List<LeaveApplications> applicationsMade =new ArrayList<>();
+    private List<LeaveApplications> applicationsToReview =new ArrayList<>();
+
 
 }
